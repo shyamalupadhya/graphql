@@ -8,6 +8,7 @@ import User from "./resolvers/user";
 import Hobby from "./resolvers/hobby";
 import Post from "./resolvers/post";
 import Comment from "./resolvers/comment";
+import Mutation from "./resolvers/mutation";
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,7 @@ app.use(cors());
 const typeDefs = gql`${fs.readFileSync(__dirname.concat('/schema/schema.graphql'), 'utf8')}`;
 const resolvers = {
     Query,
+    Mutation,
     User,
     Hobby,
     Post,
