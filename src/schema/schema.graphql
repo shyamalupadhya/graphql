@@ -1,0 +1,38 @@
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    age: Int
+    posts: [Post!]!
+    comments: [Comment!]!
+    hobbies: [Hobby!]!
+}
+
+type Post {
+    id: ID!
+    title: String!
+    body: String!
+    published: Boolean!
+    author: User!
+}
+
+type Comment {
+    id: ID!
+    text: String!
+    post: Post!
+    author: User!
+}
+
+type Hobby {
+    id: ID!
+    name: String!
+    users: [User!]!
+}
+
+type Query {
+    user (name: String!): User!
+    post (id: ID!): Post!
+    comment (id: ID!): Comment!
+    hobby (name: String): Hobby!
+}
+
