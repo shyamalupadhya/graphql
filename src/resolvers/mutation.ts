@@ -72,7 +72,7 @@ const Mutation = {
 
     // @ts-ignore
     createPost: (parent, args, ctx, info) => {
-        const {db} = ctx;
+        const {db, pubsub} = ctx;
 
         const foundUser: User = _.find(db.users, (u: User) => {
             return u.id === args.data.author;
@@ -87,12 +87,21 @@ const Mutation = {
             ...args.data
         };
         db.posts.push(post)
+
+        if (post.published) {
+            pubsub.publish('post', {
+                post: {
+                    mutation: 'CREATED',
+                    data: post
+                }
+            })
+        }
         return post;
     },
 
     // @ts-ignore
     updatePost: (parent, args, ctx, info) => {
-        const {db} = ctx;
+        const {db, pubsub} = ctx;
         const {data} = args;
 
         const foundPost: Post = _.find(db.posts, (u: Post) => {
@@ -114,12 +123,21 @@ const Mutation = {
             foundPost.published = data.published;
         }
 
+        if (foundPost.published) {
+            pubsub.publish('post', {
+                post: {
+                    mutation: 'UPDATED',
+                    data: foundPost
+                }
+            })
+        }
+
         return foundPost;
     },
 
     // @ts-ignore
     deletePost: (parent, args, ctx, info) => {
-        const {db} = ctx;
+        const {db, pubsub} = ctx;
         const foundPost: Post = _.find(db.posts, (u: Post) => {
             return u.id === args.id;
         });
@@ -130,12 +148,21 @@ const Mutation = {
 
         db.comments = db.comments.filter((p: Comment) => p.post !== args.id);
         db.posts = db.posts.filter((p: Post) => p.id !== args.id);
+
+        if (foundPost.published) {
+            pubsub.publish('post', {
+                post: {
+                    mutation: 'DELETED',
+                    data: foundPost
+                }
+            })
+        }
         return foundPost;
     },
 
     // @ts-ignore
     createComment: (parent, args, ctx, info) => {
-        const {db} = ctx;
+        const {db, pubsub} = ctx;
 
         const foundUser: User = _.find(db.users, (u: User) => {
             return u.id === args.data.author;
@@ -158,12 +185,21 @@ const Mutation = {
             ...args.data
         };
         db.comments.push(comment)
+
+
+        pubsub.publish(`comment ${args.data.post}`, {
+            comment: {
+                mutation: 'CREATED',
+                data: comment
+            }
+        })
+
         return comment;
     },
 
     // @ts-ignore
     deleteComment: (parent, args, ctx, info) => {
-        const {db} = ctx;
+        const {db, pubsub} = ctx;
         const foundComment: Comment = _.find(db.comments, (u: Comment) => {
             return u.id === args.id;
         });
@@ -173,6 +209,14 @@ const Mutation = {
         }
 
         db.comments = db.comments.filter((p: Comment) => p.id !== args.id);
+
+        pubsub.publish(`comment ${foundComment.post}`, {
+            comment: {
+                mutation: 'DELETED',
+                data: foundComment
+            }
+        })
+
         return foundComment;
     },
 };
